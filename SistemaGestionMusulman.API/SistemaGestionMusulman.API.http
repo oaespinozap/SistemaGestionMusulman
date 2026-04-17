@@ -1,0 +1,6 @@
+@SistemaGestionMusulman.API_HostAddress = http://localhost:5027
+
+GET {{SistemaGestionMusulman.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

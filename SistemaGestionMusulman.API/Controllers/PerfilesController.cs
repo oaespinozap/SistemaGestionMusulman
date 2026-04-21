@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using SistemaGestionMusulman.API.Data;
 using SistemaGestionMusulman.API.Models;
+using SistemaGestionMusulman.API.Services; // ¡Ahora usa el Servicio!
 
 namespace SistemaGestionMusulman.API.Controllers
 {
@@ -9,33 +8,53 @@ namespace SistemaGestionMusulman.API.Controllers
     [ApiController]
     public class PerfilesController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        // El Recepcionista solo conoce al Gerente (Service), NO a la base de datos
+        private readonly IPerfilMusulmanService _service;
 
-        // El recepcionista pide la llave del puente (context) para poder trabajar
-        public PerfilesController(ApplicationDbContext context)
+        public PerfilesController(IPerfilMusulmanService service)
         {
-            _context = context;
+            _service = service;
         }
 
-        // 1. OÍDOS (GET): Cuando internet pregunte "Dame todos los perfiles"
         [HttpGet]
         public async Task<ActionResult<IEnumerable<PerfilMusulman>>> ObtenerTodosLosPerfiles()
         {
-            return await _context.PerfilesMusulmanes.ToListAsync();
+            var perfiles = await _service.ObtenerTodosAsync();
+            return Ok(perfiles);
         }
 
-        // 2. BOCA (POST): Cuando internet diga "Toma, guarda este nuevo perfil"
-        [HttpPost]
-        public async Task<ActionResult<PerfilMusulman>> RegistrarNuevoPerfil(PerfilMusulman nuevoPerfil)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> ObtenerPerfilPorId(Guid id)
         {
-            // Le decimos al puente que agregue el nuevo registro
-            _context.PerfilesMusulmanes.Add(nuevoPerfil);
+            var perfil = await _service.ObtenerPorIdAsync(id);
+            if (perfil == null) return NotFound(new { mensaje = "El perfil no fue encontrado." });
 
-            // Guardamos los cambios en PostgreSQL
-            await _context.SaveChangesAsync();
+            return Ok(perfil);
+        }
 
-            // Respondemos que todo salió bien y mostramos lo que se guardó
-            return Ok(nuevoPerfil);
+        [HttpPost]
+        public async Task<ActionResult<PerfilMusulman>> CrearPerfil(PerfilMusulman perfil)
+        {
+            var nuevoPerfil = await _service.CrearPerfilAsync(perfil);
+            return CreatedAtAction(nameof(ObtenerPerfilPorId), new { id = nuevoPerfil.Id }, nuevoPerfil);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> ActualizarPerfil(Guid id, PerfilMusulman perfilActualizado)
+        {
+            var exito = await _service.ActualizarPerfilAsync(id, perfilActualizado);
+            if (!exito) return BadRequest(new { mensaje = "Error al actualizar. Verifica el ID." });
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> EliminarPerfil(Guid id)
+        {
+            var exito = await _service.EliminarPerfilAsync(id);
+            if (!exito) return NotFound(new { mensaje = "El perfil que intentas eliminar no existe." });
+
+            return NoContent();
         }
     }
 }

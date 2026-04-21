@@ -12,5 +12,8 @@ namespace SistemaGestionMusulman.API.Data
 
         // Aquí le decimos qué "moldes" van a cruzar por el puente para convertirse en tablas
         public DbSet<PerfilMusulman> PerfilesMusulmanes { get; set; }
+
+        // 👇 ¡NUEVO! Registramos nuestra tabla de inventario Sadaqah
+        public DbSet<DonacionSadaqah> DonacionesSadaqah { get; set; }
     }
 }

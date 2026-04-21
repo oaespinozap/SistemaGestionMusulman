@@ -21,6 +21,10 @@ builder.Services.AddScoped<SistemaGestionMusulman.API.Services.IPerfilMusulmanSe
 // --- CONTRATACIÓN DEL EQUIPO DE SADAQAH ---
 builder.Services.AddScoped<SistemaGestionMusulman.API.Repositories.ISadaqahRepository, SistemaGestionMusulman.API.Repositories.SadaqahRepository>();
 builder.Services.AddScoped<SistemaGestionMusulman.API.Services.ISadaqahService, SistemaGestionMusulman.API.Services.SadaqahService>();
+// --- CONTRATACIÓN DEL EQUIPO DE MADRASA (EDUCACIÓN) ---
+builder.Services.AddScoped<SistemaGestionMusulman.API.Repositories.IMadrasaRepository, SistemaGestionMusulman.API.Repositories.MadrasaRepository>();
+builder.Services.AddScoped<SistemaGestionMusulman.API.Services.IMadrasaService, SistemaGestionMusulman.API.Services.MadrasaService>();
+
 // ------------------------------------------------------------------
 
 var app = builder.Build();

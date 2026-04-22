@@ -1,11 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SistemaGestionMusulman.API.Models;
 using SistemaGestionMusulman.API.Services;
 
 namespace SistemaGestionMusulman.API.Controllers
 {
+    [Authorize(Roles = "Administrador")] // <--- Solo el jefe entra aquí
     [Route("api/[controller]")]
     [ApiController]
+
     public class SadaqahController : ControllerBase
     {
         // El Recepcionista solo se comunica con el Gerente de Sadaqah

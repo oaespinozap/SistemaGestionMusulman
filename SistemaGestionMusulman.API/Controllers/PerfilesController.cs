@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SistemaGestionMusulman.API.Models;
-using SistemaGestionMusulman.API.Services; // ¡Ahora usa el Servicio!
+using SistemaGestionMusulman.API.Services;
 
 namespace SistemaGestionMusulman.API.Controllers
 {
+    [Authorize] // <--- CANDADO: Nadie entra sin token
     [Route("api/[controller]")]
     [ApiController]
     public class PerfilesController : ControllerBase

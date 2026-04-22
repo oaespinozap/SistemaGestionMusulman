@@ -1,23 +1,27 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SistemaGestionMusulman.API.Models;
 
 namespace SistemaGestionMusulman.API.Data
 {
-    // Al heredar de "DbContext", le decimos a .NET que esta clase es nuestro puente hacia PostgreSQL
-    public class ApplicationDbContext : DbContext
+    // 👇 ¡NUEVO! Cambiamos DbContext por IdentityDbContext para activar la seguridad
+    public class ApplicationDbContext : IdentityDbContext<IdentityUser>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
         }
 
-        // Aquí le decimos qué "moldes" van a cruzar por el puente para convertirse en tablas
+        // Tus tablas existentes (No tocamos nada aquí)
         public DbSet<PerfilMusulman> PerfilesMusulmanes { get; set; }
-
-        // El módulo de inventario Sadaqah 
         public DbSet<DonacionSadaqah> DonacionesSadaqah { get; set; }
-
-        // 👇 ¡NUEVO! Registramos nuestro Módulo de Educación (Madrasa)
         public DbSet<ClaseMadrasa> ClasesMadrasa { get; set; }
         public DbSet<InscripcionClase> InscripcionesClases { get; set; }
+
+        // 👇 ¡NUEVO! Es obligatorio agregar esto para que Identity cree sus tablas sin error
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+        }
     }
 }

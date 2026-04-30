@@ -1,41 +1,74 @@
-using Microsoft.EntityFrameworkCore;
-using SistemaGestionMusulman.API.Data;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
+using Microsoft.OpenApi.Models;
+using SistemaGestionMusulman.API.Data;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-    builder.Services.AddControllers();
+/* Add services to the container. */
+builder.Services.AddControllers();
 
-// Le decimos a .NET que use nuestro puente y se conecte a PostgreSQL
-    builder.Services.AddDbContext<ApplicationDbContext>(opciones =>
+/* Le decimos a .NET que use nuestro puente y se conecte a PostgreSQL */
+builder.Services.AddDbContext<ApplicationDbContext>(opciones =>
     opciones.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// --- AQUÍ ENCENDEMOS SWAGGER ---
+/* --- AQUÍ ENCENDEMOS SWAGGER --- */
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
+/* CORRECCIÓN: Ahora Swagger sabe cómo dibujar el botón de Autorización */
+builder.Services.AddSwaggerGen(c =>
+{
+    /* Configuración del botón "Authorize" en Swagger */
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "Autorización JWT usando el esquema Bearer. \r\n\r\n Escribe la palabra 'Bearer' [espacio] y luego tu token en la caja de abajo.\r\n\r\nEjemplo: 'Bearer eyJhbGciOiJIUzI1NiIs...'",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
 
-// --- CONTRATACIÓN DE NUEVO PERSONAL (Inyección de Dependencias) ---
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement()
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                },
+                Scheme = "oauth2",
+                Name = "Bearer",
+                In = ParameterLocation.Header,
+            },
+            new List<string>()
+        }
+    });
+});
+
+/* --- CONTRATACIÓN DE NUEVO PERSONAL (Inyección de Dependencias) --- */
 builder.Services.AddScoped<SistemaGestionMusulman.API.Repositories.IPerfilMusulmanRepository, SistemaGestionMusulman.API.Repositories.PerfilMusulmanRepository>();
 builder.Services.AddScoped<SistemaGestionMusulman.API.Services.IPerfilMusulmanService, SistemaGestionMusulman.API.Services.PerfilMusulmanService>();
-// --- CONTRATACIÓN DEL EQUIPO DE SADAQAH ---
+
+/* --- CONTRATACIÓN DEL EQUIPO DE SADAQAH --- */
 builder.Services.AddScoped<SistemaGestionMusulman.API.Repositories.ISadaqahRepository, SistemaGestionMusulman.API.Repositories.SadaqahRepository>();
 builder.Services.AddScoped<SistemaGestionMusulman.API.Services.ISadaqahService, SistemaGestionMusulman.API.Services.SadaqahService>();
-// --- CONTRATACIÓN DEL EQUIPO DE MADRASA (EDUCACIÓN) ---
+
+/* --- CONTRATACIÓN DEL EQUIPO DE MADRASA (EDUCACIÓN) --- */
 builder.Services.AddScoped<SistemaGestionMusulman.API.Repositories.IMadrasaRepository, SistemaGestionMusulman.API.Repositories.MadrasaRepository>();
 builder.Services.AddScoped<SistemaGestionMusulman.API.Services.IMadrasaService, SistemaGestionMusulman.API.Services.MadrasaService>();
 
-// ------------------------------------------------------------------
-// --- 1. ACTIVAR IDENTITY (USUARIOS Y ROLES) ---
+/* --- 1. ACTIVAR IDENTITY (USUARIOS Y ROLES) --- */
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-// --- 2. CONFIGURAR LOS GUARDIAS JWT (PULSERAS VIP) ---
+/* --- 2. CONFIGURAR LOS GUARDIAS JWT (PULSERAS VIP) --- */
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -51,24 +84,24 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
     };
 });
 
-
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+/* Configure the HTTP request pipeline. */
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(); // ¡Esta es la famosa interfaz verde!
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication(); /* <-- 1. Identifica QUIÉN eres */
+app.UseAuthorization();  /* <-- 2. Revisa QUÉ PUEDES hacer */
 
-app.UseAuthentication(); // <-- 1. Identifica QUIÉN eres (NUEVO)
-app.UseAuthorization();  // <-- 2. Revisa QUÉ PUEDES hacer (Ya estaba)
 app.MapControllers();
+
 app.Run();

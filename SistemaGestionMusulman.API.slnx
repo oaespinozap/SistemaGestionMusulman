@@ -2,5 +2,6 @@
   <Folder Name="/Elementos de la solución/">
     <File Path=".gitignore" />
   </Folder>
+  <Project Path="../SistemaGestionMusulman.Frontend/SistemaGestionMusulman.Frontend.csproj" />
   <Project Path="SistemaGestionMusulman.API/SistemaGestionMusulman.API.csproj" />
 </Solution>

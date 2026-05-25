@@ -8,6 +8,16 @@ using SistemaGestionMusulman.API.Data;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+// --- CONFIGURACIÓN CORS (Permitir al Frontend conectarse) ---
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("PermitirFrontend", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
 
 /* Add services to the container. */
 builder.Services.AddControllers();
@@ -88,6 +98,7 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+
 var app = builder.Build();
 
 /* Configure the HTTP request pipeline. */
@@ -98,6 +109,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// --- ENCENDER CORS (Debe ir exactamente aquí, después de HTTPS y antes de Auth) ---
+app.UseCors("PermitirFrontend");
 
 app.UseAuthentication(); /* <-- 1. Identifica QUIÉN eres */
 app.UseAuthorization();  /* <-- 2. Revisa QUÉ PUEDES hacer */

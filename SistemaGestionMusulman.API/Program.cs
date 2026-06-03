@@ -2,12 +2,12 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi;
 using Microsoft.OpenApi.Models;
 using SistemaGestionMusulman.API.Data;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
 // --- CONFIGURACIÓN CORS (Permitir al Frontend conectarse) ---
 builder.Services.AddCors(options =>
 {
@@ -28,11 +28,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(opciones =>
 
 /* --- AQUÍ ENCENDEMOS SWAGGER --- */
 builder.Services.AddEndpointsApiExplorer();
-
-/* CORRECCIÓN: Ahora Swagger sabe cómo dibujar el botón de Autorización */
 builder.Services.AddSwaggerGen(c =>
 {
-    /* Configuración del botón "Authorize" en Swagger */
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "Autorización JWT usando el esquema Bearer. \r\n\r\n Escribe la palabra 'Bearer' [espacio] y luego tu token en la caja de abajo.\r\n\r\nEjemplo: 'Bearer eyJhbGciOiJIUzI1NiIs...'",
@@ -61,24 +58,22 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-/* --- CONTRATACIÓN DE NUEVO PERSONAL (Inyección de Dependencias) --- */
+/* --- INYECCIÓN DE DEPENDENCIAS --- */
 builder.Services.AddScoped<SistemaGestionMusulman.API.Repositories.IPerfilMusulmanRepository, SistemaGestionMusulman.API.Repositories.PerfilMusulmanRepository>();
 builder.Services.AddScoped<SistemaGestionMusulman.API.Services.IPerfilMusulmanService, SistemaGestionMusulman.API.Services.PerfilMusulmanService>();
 
-/* --- CONTRATACIÓN DEL EQUIPO DE SADAQAH --- */
 builder.Services.AddScoped<SistemaGestionMusulman.API.Repositories.ISadaqahRepository, SistemaGestionMusulman.API.Repositories.SadaqahRepository>();
 builder.Services.AddScoped<SistemaGestionMusulman.API.Services.ISadaqahService, SistemaGestionMusulman.API.Services.SadaqahService>();
 
-/* --- CONTRATACIÓN DEL EQUIPO DE MADRASA (EDUCACIÓN) --- */
 builder.Services.AddScoped<SistemaGestionMusulman.API.Repositories.IMadrasaRepository, SistemaGestionMusulman.API.Repositories.MadrasaRepository>();
 builder.Services.AddScoped<SistemaGestionMusulman.API.Services.IMadrasaService, SistemaGestionMusulman.API.Services.MadrasaService>();
 
-/* --- 1. ACTIVAR IDENTITY (USUARIOS Y ROLES) --- */
+/* --- 1. ACTIVAR IDENTITY --- */
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-/* --- 2. CONFIGURAR LOS GUARDIAS JWT (PULSERAS VIP) --- */
+/* --- 2. CONFIGURAR LOS GUARDIAS JWT --- */
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -98,7 +93,6 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-
 var app = builder.Build();
 
 /* Configure the HTTP request pipeline. */
@@ -110,11 +104,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// --- ENCENDER CORS (Debe ir exactamente aquí, después de HTTPS y antes de Auth) ---
+// --- ENCENDER CORS ---
 app.UseCors("PermitirFrontend");
 
-app.UseAuthentication(); /* <-- 1. Identifica QUIÉN eres */
-app.UseAuthorization();  /* <-- 2. Revisa QUÉ PUEDES hacer */
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 

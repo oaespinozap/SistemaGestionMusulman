@@ -6,7 +6,10 @@ using Microsoft.OpenApi.Models;
 using SistemaGestionMusulman.API.Data;
 using System.Text;
 
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
+
 
 // --- CONFIGURACIÓN CORS (Permitir al Frontend conectarse) ---
 builder.Services.AddCors(options =>

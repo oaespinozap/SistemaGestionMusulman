@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using SistemaGestionMusulman.API.Models;
+using SistemaGestionMusulman.Backend.Models;
 
 namespace SistemaGestionMusulman.API.Data
 {
@@ -14,7 +15,7 @@ namespace SistemaGestionMusulman.API.Data
 
         // Tus tablas existentes (No tocamos nada aquí)
         public DbSet<PerfilMusulman> PerfilesMusulmanes { get; set; }
-        public DbSet<DonacionSadaqah> DonacionesSadaqah { get; set; }
+        public DbSet<AsistenciaSocial> AsistenciasSociales { get; set; }
         public DbSet<ClaseMadrasa> ClasesMadrasa { get; set; }
         public DbSet<InscripcionClase> InscripcionesClases { get; set; }
 

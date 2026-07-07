@@ -26,169 +26,123 @@ namespace SistemaGestionMusulman.API.Migrations
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("SistemaGestionMusulman.API.Models.ClaseMadrasa", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("Horario")
-                        .HasColumnType("text");
+                b.Property<string>("Horario")
+                    .HasColumnType("text");
 
-                    b.Property<string>("NombreMateria")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("NombreMateria")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("Profesor")
-                        .HasColumnType("text");
+                b.Property<string>("Profesor")
+                    .HasColumnType("text");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.ToTable("ClasesMadrasa");
-                });
-
-            modelBuilder.Entity("SistemaGestionMusulman.API.Models.DonacionSadaqah", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("BeneficiarioId")
-                        .HasColumnType("uuid");
-
-                    b.Property<decimal>("Cantidad")
-                        .HasColumnType("numeric");
-
-                    b.Property<int>("Categoria")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("FechaRegistro")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Item")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("Observaciones")
-                        .HasColumnType("text");
-
-                    b.Property<string>("UnidadMedida")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BeneficiarioId");
-
-                    b.ToTable("DonacionesSadaqah");
-                });
+                b.ToTable("ClasesMadrasa");
+            });
 
             modelBuilder.Entity("SistemaGestionMusulman.API.Models.InscripcionClase", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid>("ClaseId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ClaseId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Estado")
-                        .HasColumnType("integer");
+                b.Property<int>("Estado")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid>("EstudianteId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("EstudianteId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("FechaInscripcion")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("FechaInscripcion")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("ClaseId");
+                b.HasIndex("ClaseId");
 
-                    b.HasIndex("EstudianteId");
+                b.HasIndex("EstudianteId");
 
-                    b.ToTable("InscripcionesClases");
-                });
+                b.ToTable("InscripcionesClases");
+            });
 
             modelBuilder.Entity("SistemaGestionMusulman.API.Models.PerfilMusulman", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("Apellidos")
-                        .IsRequired()
-                        .HasColumnType("text");
+                b.Property<string>("Apellidos")
+                    .IsRequired()
+                    .HasColumnType("text");
 
-                    b.Property<string>("DireccionVivienda")
-                        .IsRequired()
-                        .HasColumnType("text");
+                b.Property<string>("DireccionVivienda")
+                    .IsRequired()
+                    .HasColumnType("text");
 
-                    b.Property<string>("EstadoCivil")
-                        .IsRequired()
-                        .HasColumnType("text");
+                b.Property<string>("EstadoCivil")
+                    .IsRequired()
+                    .HasColumnType("text");
 
-                    b.Property<DateTime>("FechaNacimiento")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("FechaNacimiento")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("FechaShajada")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("FechaShajada")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Nombres")
-                        .IsRequired()
-                        .HasColumnType("text");
+                b.Property<string>("Nombres")
+                    .IsRequired()
+                    .HasColumnType("text");
 
-                    b.Property<string>("NumeroCedula")
-                        .IsRequired()
-                        .HasColumnType("text");
+                b.Property<string>("NumeroCedula")
+                    .IsRequired()
+                    .HasColumnType("text");
 
-                    b.Property<string>("NumeroTelefono")
-                        .IsRequired()
-                        .HasColumnType("text");
+                b.Property<string>("NumeroTelefono")
+                    .IsRequired()
+                    .HasColumnType("text");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.ToTable("PerfilesMusulmanes");
-                });
-
-            modelBuilder.Entity("SistemaGestionMusulman.API.Models.DonacionSadaqah", b =>
-                {
-                    b.HasOne("SistemaGestionMusulman.API.Models.PerfilMusulman", "Beneficiario")
-                        .WithMany()
-                        .HasForeignKey("BeneficiarioId");
-
-                    b.Navigation("Beneficiario");
-                });
+                b.ToTable("PerfilesMusulmanes");
+            });
 
             modelBuilder.Entity("SistemaGestionMusulman.API.Models.InscripcionClase", b =>
-                {
-                    b.HasOne("SistemaGestionMusulman.API.Models.ClaseMadrasa", "Clase")
-                        .WithMany("Inscripciones")
-                        .HasForeignKey("ClaseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            {
+                b.HasOne("SistemaGestionMusulman.API.Models.ClaseMadrasa", "Clase")
+                    .WithMany("Inscripciones")
+                    .HasForeignKey("ClaseId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("SistemaGestionMusulman.API.Models.PerfilMusulman", "Estudiante")
-                        .WithMany("Inscripciones")
-                        .HasForeignKey("EstudianteId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("SistemaGestionMusulman.API.Models.PerfilMusulman", "Estudiante")
+                    .WithMany("Inscripciones")
+                    .HasForeignKey("EstudianteId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Clase");
+                b.Navigation("Clase");
 
-                    b.Navigation("Estudiante");
-                });
+                b.Navigation("Estudiante");
+            });
 
             modelBuilder.Entity("SistemaGestionMusulman.API.Models.ClaseMadrasa", b =>
-                {
-                    b.Navigation("Inscripciones");
-                });
+            {
+                b.Navigation("Inscripciones");
+            });
 
             modelBuilder.Entity("SistemaGestionMusulman.API.Models.PerfilMusulman", b =>
-                {
-                    b.Navigation("Inscripciones");
-                });
+            {
+                b.Navigation("Inscripciones");
+            });
 #pragma warning restore 612, 618
         }
     }

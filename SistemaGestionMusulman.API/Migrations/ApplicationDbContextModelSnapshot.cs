@@ -240,43 +240,6 @@ namespace SistemaGestionMusulman.API.Migrations
                     b.ToTable("ClasesMadrasa");
                 });
 
-            modelBuilder.Entity("SistemaGestionMusulman.API.Models.DonacionSadaqah", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("BeneficiarioId")
-                        .HasColumnType("uuid");
-
-                    b.Property<decimal>("Cantidad")
-                        .HasColumnType("numeric");
-
-                    b.Property<int>("Categoria")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("FechaRegistro")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Item")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("Observaciones")
-                        .HasColumnType("text");
-
-                    b.Property<string>("UnidadMedida")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BeneficiarioId");
-
-                    b.ToTable("DonacionesSadaqah");
-                });
-
             modelBuilder.Entity("SistemaGestionMusulman.API.Models.InscripcionClase", b =>
                 {
                     b.Property<Guid>("Id")
@@ -293,7 +256,7 @@ namespace SistemaGestionMusulman.API.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("FechaInscripcion")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -323,10 +286,10 @@ namespace SistemaGestionMusulman.API.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("FechaNacimiento")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime>("FechaShajada")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Nombres")
                         .IsRequired()
@@ -343,6 +306,39 @@ namespace SistemaGestionMusulman.API.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("PerfilesMusulmanes");
+                });
+
+            modelBuilder.Entity("SistemaGestionMusulman.Backend.Models.AsistenciaSocial", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CategoriaZakat")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("FechaEntrega")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<decimal?>("MontoEstimado")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("Observaciones")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("PerfilMusulmanId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TipoDeAyuda")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PerfilMusulmanId");
+
+                    b.ToTable("AsistenciasSociales");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -396,15 +392,6 @@ namespace SistemaGestionMusulman.API.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("SistemaGestionMusulman.API.Models.DonacionSadaqah", b =>
-                {
-                    b.HasOne("SistemaGestionMusulman.API.Models.PerfilMusulman", "Beneficiario")
-                        .WithMany()
-                        .HasForeignKey("BeneficiarioId");
-
-                    b.Navigation("Beneficiario");
-                });
-
             modelBuilder.Entity("SistemaGestionMusulman.API.Models.InscripcionClase", b =>
                 {
                     b.HasOne("SistemaGestionMusulman.API.Models.ClaseMadrasa", "Clase")
@@ -422,6 +409,17 @@ namespace SistemaGestionMusulman.API.Migrations
                     b.Navigation("Clase");
 
                     b.Navigation("Estudiante");
+                });
+
+            modelBuilder.Entity("SistemaGestionMusulman.Backend.Models.AsistenciaSocial", b =>
+                {
+                    b.HasOne("SistemaGestionMusulman.API.Models.PerfilMusulman", "PerfilMusulman")
+                        .WithMany()
+                        .HasForeignKey("PerfilMusulmanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PerfilMusulman");
                 });
 
             modelBuilder.Entity("SistemaGestionMusulman.API.Models.ClaseMadrasa", b =>

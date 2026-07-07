@@ -64,10 +64,6 @@ builder.Services.AddSwaggerGen(c =>
 /* --- INYECCIÓN DE DEPENDENCIAS --- */
 builder.Services.AddScoped<SistemaGestionMusulman.API.Repositories.IPerfilMusulmanRepository, SistemaGestionMusulman.API.Repositories.PerfilMusulmanRepository>();
 builder.Services.AddScoped<SistemaGestionMusulman.API.Services.IPerfilMusulmanService, SistemaGestionMusulman.API.Services.PerfilMusulmanService>();
-
-builder.Services.AddScoped<SistemaGestionMusulman.API.Repositories.ISadaqahRepository, SistemaGestionMusulman.API.Repositories.SadaqahRepository>();
-builder.Services.AddScoped<SistemaGestionMusulman.API.Services.ISadaqahService, SistemaGestionMusulman.API.Services.SadaqahService>();
-
 builder.Services.AddScoped<SistemaGestionMusulman.API.Repositories.IMadrasaRepository, SistemaGestionMusulman.API.Repositories.MadrasaRepository>();
 builder.Services.AddScoped<SistemaGestionMusulman.API.Services.IMadrasaService, SistemaGestionMusulman.API.Services.MadrasaService>();
 

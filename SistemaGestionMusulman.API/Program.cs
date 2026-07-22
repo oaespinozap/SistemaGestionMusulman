@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SistemaGestionMusulman.API.Data;
+using SistemaGestionMusulman.API.Repositories;
+using SistemaGestionMusulman.API.Services;
 using System.Text;
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -66,6 +68,8 @@ builder.Services.AddScoped<SistemaGestionMusulman.API.Repositories.IPerfilMusulm
 builder.Services.AddScoped<SistemaGestionMusulman.API.Services.IPerfilMusulmanService, SistemaGestionMusulman.API.Services.PerfilMusulmanService>();
 builder.Services.AddScoped<SistemaGestionMusulman.API.Repositories.IMadrasaRepository, SistemaGestionMusulman.API.Repositories.MadrasaRepository>();
 builder.Services.AddScoped<SistemaGestionMusulman.API.Services.IMadrasaService, SistemaGestionMusulman.API.Services.MadrasaService>();
+builder.Services.AddScoped<IAsistenciaSocialRepository, AsistenciaSocialRepository>();
+builder.Services.AddScoped<IAsistenciaSocialService, AsistenciaSocialService>();
 
 /* --- 1. ACTIVAR IDENTITY --- */
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()

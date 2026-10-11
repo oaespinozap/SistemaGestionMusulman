@@ -12,6 +12,8 @@ namespace SistemaGestionMusulman.Backend.Models
         // Conexión directa con el hermano/hermana que recibe la ayuda
         [Required]
         public Guid PerfilMusulmanId { get; set; }
+        [NotMapped]
+        public string? NombreBeneficiario { get; set; }
 
         [ForeignKey("PerfilMusulmanId")]
         public PerfilMusulman? PerfilMusulman { get; set; }
@@ -32,5 +34,7 @@ namespace SistemaGestionMusulman.Backend.Models
 
         // Detalles adicionales
         public string? Observaciones { get; set; }
+
+       
     }
 }

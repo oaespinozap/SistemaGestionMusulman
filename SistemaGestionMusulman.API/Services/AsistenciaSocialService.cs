@@ -13,9 +13,28 @@ namespace SistemaGestionMusulman.API.Services
             _repository = repository;
         }
 
+        // ¡Aquí está nuestra ÚNICA versión de ObtenerTodasAsync!
         public async Task<IEnumerable<AsistenciaSocial>> ObtenerTodasAsync()
         {
-            return await _repository.ObtenerTodasAsync();
+            // 1. Buscamos los registros en la base de datos
+            var asistencias = await _repository.ObtenerTodasAsync();
+
+            // 2. Le armamos el nombre a cada registro
+            foreach (var asistencia in asistencias)
+            {
+                if (asistencia.PerfilMusulman != null)
+                {
+                    // Unimos Nombre y Apellido
+                    asistencia.NombreBeneficiario = $"{asistencia.PerfilMusulman.Nombres} {asistencia.PerfilMusulman.Apellidos}";
+                }
+                else
+                {
+                    asistencia.NombreBeneficiario = "Desconocido";
+                }
+            }
+
+            // 3. Devolvemos la lista lista para usar
+            return asistencias;
         }
 
         public async Task<AsistenciaSocial> ObtenerPorIdAsync(Guid id)

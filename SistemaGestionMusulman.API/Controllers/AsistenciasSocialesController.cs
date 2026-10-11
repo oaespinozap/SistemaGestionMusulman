@@ -5,6 +5,8 @@ using SistemaGestionMusulman.Backend.Models;
 
 namespace SistemaGestionMusulman.API.Controllers
 {
+    using Microsoft.AspNetCore.Authorization;
+
     [Route("api/[controller]")]
     [ApiController]
     public class AsistenciasSocialesController : ControllerBase

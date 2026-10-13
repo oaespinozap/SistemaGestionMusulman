@@ -308,6 +308,40 @@ namespace SistemaGestionMusulman.API.Migrations
                     b.ToTable("PerfilesMusulmanes");
                 });
 
+            modelBuilder.Entity("SistemaGestionMusulman.Backend.Models.ArticuloInventario", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("CantidadDisponible")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Categoria")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("FechaCaducidad")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("FechaIngreso")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Inventario");
+                });
+
             modelBuilder.Entity("SistemaGestionMusulman.Backend.Models.AsistenciaSocial", b =>
                 {
                     b.Property<Guid>("Id")

@@ -19,6 +19,8 @@ namespace SistemaGestionMusulman.API.Models
 
         public DateTime FechaNacimiento { get; set; }
 
+        public string? Sexo { get; set; } // Puede ser "Masculino" o "Femenino"
+
         public DateTime FechaShajada { get; set; }
 
         public string EstadoCivil { get; set; } = string.Empty;

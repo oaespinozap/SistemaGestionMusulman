@@ -35,6 +35,12 @@ namespace SistemaGestionMusulman.Backend.Models
         // Detalles adicionales
         public string? Observaciones { get; set; }
 
-       
+        // Conexión opcional con el módulo de Inventario
+        public Guid? ArticuloInventarioId { get; set; }
+
+        // Cantidad que se va a restar del almacén
+        public int? CantidadExtraida { get; set; }
+
+
     }
 }

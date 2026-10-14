@@ -303,6 +303,9 @@ namespace SistemaGestionMusulman.API.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Sexo")
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.ToTable("PerfilesMusulmanes");
@@ -347,6 +350,12 @@ namespace SistemaGestionMusulman.API.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ArticuloInventarioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("CantidadExtraida")
+                        .HasColumnType("integer");
 
                     b.Property<string>("CategoriaZakat")
                         .IsRequired()

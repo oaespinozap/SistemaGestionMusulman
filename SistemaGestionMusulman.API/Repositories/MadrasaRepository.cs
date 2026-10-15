@@ -13,25 +13,26 @@ namespace SistemaGestionMusulman.API.Repositories
             _context = context;
         }
 
-        public async Task<IEnumerable<ClaseMadrasa>> ObtenerClasesAsync()
-        {
-            // Magia pura de Entity Framework: Traemos las clases, 
-            // incluimos las fichas de inscripción, y de ahí extraemos al estudiante.
-            return await _context.ClasesMadrasa
-                                 .Include(c => c.Inscripciones)
-                                    .ThenInclude(i => i.Estudiante)
-                                 .ToListAsync();
-        }
-
-        public async Task AgregarClaseAsync(ClaseMadrasa clase)
+        public async Task<ClaseMadrasa> AbrirClaseAsync(ClaseMadrasa clase)
         {
             _context.ClasesMadrasa.Add(clase);
             await _context.SaveChangesAsync();
+            return clase;
         }
 
-        public async Task InscribirEstudianteAsync(InscripcionClase inscripcion)
+        public async Task<IEnumerable<ClaseMadrasa>> ObtenerClasesRecientesAsync()
         {
-            _context.InscripcionesClases.Add(inscripcion);
+            // Traemos las últimas 10 clases para un futuro historial
+            return await _context.ClasesMadrasa
+                .Include(c => c.Materia)
+                .OrderByDescending(c => c.Fecha)
+                .Take(10)
+                .ToListAsync();
+        }
+
+        public async Task RegistrarAsistenciaAsync(AsistenciaMadrasa asistencia)
+        {
+            _context.AsistenciasMadrasa.Add(asistencia);
             await _context.SaveChangesAsync();
         }
     }

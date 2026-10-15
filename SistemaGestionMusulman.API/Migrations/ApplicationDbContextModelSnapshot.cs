@@ -218,53 +218,72 @@ namespace SistemaGestionMusulman.API.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("SistemaGestionMusulman.API.Models.AsistenciaMadrasa", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ClaseMadrasaId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PerfilMusulmanId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClaseMadrasaId");
+
+                    b.HasIndex("PerfilMusulmanId");
+
+                    b.ToTable("AsistenciasMadrasa");
+                });
+
             modelBuilder.Entity("SistemaGestionMusulman.API.Models.ClaseMadrasa", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Horario")
-                        .HasColumnType("text");
+                    b.Property<bool>("EsMasterClass")
+                        .HasColumnType("boolean");
 
-                    b.Property<string>("NombreMateria")
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<Guid>("MateriaId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TemaDictado")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("Profesor")
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("MateriaId");
+
                     b.ToTable("ClasesMadrasa");
                 });
 
-            modelBuilder.Entity("SistemaGestionMusulman.API.Models.InscripcionClase", b =>
+            modelBuilder.Entity("SistemaGestionMusulman.API.Models.Materia", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("ClaseId")
-                        .HasColumnType("uuid");
+                    b.Property<bool>("EsObligatoria")
+                        .HasColumnType("boolean");
 
-                    b.Property<int>("Estado")
+                    b.Property<int>("MetaClases")
                         .HasColumnType("integer");
 
-                    b.Property<Guid>("EstudianteId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("FechaInscripcion")
-                        .HasColumnType("timestamp without time zone");
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ClaseId");
-
-                    b.HasIndex("EstudianteId");
-
-                    b.ToTable("InscripcionesClases");
+                    b.ToTable("Materias");
                 });
 
             modelBuilder.Entity("SistemaGestionMusulman.API.Models.PerfilMusulman", b =>
@@ -302,6 +321,9 @@ namespace SistemaGestionMusulman.API.Migrations
                     b.Property<string>("NumeroTelefono")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<bool>("PruebaCicloBasicoAprobada")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Sexo")
                         .HasColumnType("text");
@@ -435,23 +457,34 @@ namespace SistemaGestionMusulman.API.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("SistemaGestionMusulman.API.Models.InscripcionClase", b =>
+            modelBuilder.Entity("SistemaGestionMusulman.API.Models.AsistenciaMadrasa", b =>
                 {
                     b.HasOne("SistemaGestionMusulman.API.Models.ClaseMadrasa", "Clase")
-                        .WithMany("Inscripciones")
-                        .HasForeignKey("ClaseId")
+                        .WithMany()
+                        .HasForeignKey("ClaseMadrasaId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SistemaGestionMusulman.API.Models.PerfilMusulman", "Estudiante")
-                        .WithMany("Inscripciones")
-                        .HasForeignKey("EstudianteId")
+                    b.HasOne("SistemaGestionMusulman.API.Models.PerfilMusulman", "Perfil")
+                        .WithMany()
+                        .HasForeignKey("PerfilMusulmanId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Clase");
 
-                    b.Navigation("Estudiante");
+                    b.Navigation("Perfil");
+                });
+
+            modelBuilder.Entity("SistemaGestionMusulman.API.Models.ClaseMadrasa", b =>
+                {
+                    b.HasOne("SistemaGestionMusulman.API.Models.Materia", "Materia")
+                        .WithMany()
+                        .HasForeignKey("MateriaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Materia");
                 });
 
             modelBuilder.Entity("SistemaGestionMusulman.Backend.Models.AsistenciaSocial", b =>
@@ -463,16 +496,6 @@ namespace SistemaGestionMusulman.API.Migrations
                         .IsRequired();
 
                     b.Navigation("PerfilMusulman");
-                });
-
-            modelBuilder.Entity("SistemaGestionMusulman.API.Models.ClaseMadrasa", b =>
-                {
-                    b.Navigation("Inscripciones");
-                });
-
-            modelBuilder.Entity("SistemaGestionMusulman.API.Models.PerfilMusulman", b =>
-                {
-                    b.Navigation("Inscripciones");
                 });
 #pragma warning restore 612, 618
         }

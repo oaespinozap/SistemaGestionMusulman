@@ -32,8 +32,10 @@ namespace SistemaGestionMusulman.API.Models
         // Por ahora mantendremos el modelo MVP simple para nuestra primera prueba de conexión
         // ... (tus otros campos como Direccion, Telefono, etc.)
 
-        // 👇 ¡NUEVO! La conexión hacia las clases en las que está inscrito
-        public ICollection<InscripcionClase> Inscripciones { get; set; } = new List<InscripcionClase>();
+   
+        // VALIDADOR DE LA MADRASA
+        public bool PruebaCicloBasicoAprobada { get; set; } = false;
+
     }
 }
 

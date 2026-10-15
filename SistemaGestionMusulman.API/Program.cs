@@ -66,10 +66,14 @@ builder.Services.AddSwaggerGen(c =>
 /* --- INYECCIÓN DE DEPENDENCIAS --- */
 builder.Services.AddScoped<SistemaGestionMusulman.API.Repositories.IPerfilMusulmanRepository, SistemaGestionMusulman.API.Repositories.PerfilMusulmanRepository>();
 builder.Services.AddScoped<SistemaGestionMusulman.API.Services.IPerfilMusulmanService, SistemaGestionMusulman.API.Services.PerfilMusulmanService>();
-builder.Services.AddScoped<SistemaGestionMusulman.API.Repositories.IMadrasaRepository, SistemaGestionMusulman.API.Repositories.MadrasaRepository>();
-builder.Services.AddScoped<SistemaGestionMusulman.API.Services.IMadrasaService, SistemaGestionMusulman.API.Services.MadrasaService>();
+// INYECCIONES DE LA MADRASA (Materias)
+builder.Services.AddScoped<IMateriaRepository, MateriaRepository>();
+builder.Services.AddScoped<IMateriaService, MateriaService>();
 builder.Services.AddScoped<IAsistenciaSocialRepository, AsistenciaSocialRepository>();
 builder.Services.AddScoped<IAsistenciaSocialService, AsistenciaSocialService>();
+// INYECCIONES DE LA MADRASA (Clases y Asistencias)
+builder.Services.AddScoped<IMadrasaRepository, MadrasaRepository>();
+builder.Services.AddScoped<IMadrasaService, MadrasaService>();
 
 /* --- 1. ACTIVAR IDENTITY --- */
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()

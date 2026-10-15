@@ -1,21 +1,24 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SistemaGestionMusulman.API.Models
 {
     public class ClaseMadrasa
     {
         [Key]
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         [Required]
-        [StringLength(100)]
-        public string NombreMateria { get; set; } // Ej: "Árabe Básico", "Tajwid"
+        public Guid MateriaId { get; set; }
 
-        public string? Profesor { get; set; } // Nombre del maestro o Shaij
+        [ForeignKey("MateriaId")]
+        public Materia? Materia { get; set; }
 
-        public string? Horario { get; set; } // Ej: "Sábados 9:00 AM"
+        [Required]
+        public DateTime Fecha { get; set; } = DateTime.UtcNow;
 
-        // RELACIÓN: Una clase va a tener MUCHAS fichas de inscripción
-        public ICollection<InscripcionClase> Inscripciones { get; set; } = new List<InscripcionClase>();
+        public string TemaDictado { get; set; } = string.Empty; // Pequeño resumen del día
+
+        public bool EsMasterClass { get; set; } // El requerimiento VIP que pediste
     }
 }

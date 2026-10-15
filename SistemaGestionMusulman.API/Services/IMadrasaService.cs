@@ -4,9 +4,8 @@ namespace SistemaGestionMusulman.API.Services
 {
     public interface IMadrasaService
     {
-        // Los 3 servicios que ofrece la Madrasa
-        Task<IEnumerable<ClaseMadrasa>> ListarClasesAsync();
-        Task<ClaseMadrasa> CrearClaseAsync(ClaseMadrasa clase);
-        Task<InscripcionClase> MatricularEstudianteAsync(InscripcionClase inscripcion);
+        Task<ClaseMadrasa> AbrirClaseAsync(ClaseMadrasa clase);
+        Task<IEnumerable<ClaseMadrasa>> ObtenerClasesRecientesAsync();
+        Task RegistrarAsistenciaAsync(AsistenciaMadrasa asistencia);
     }
 }

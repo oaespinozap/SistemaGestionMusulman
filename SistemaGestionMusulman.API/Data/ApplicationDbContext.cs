@@ -16,9 +16,9 @@ namespace SistemaGestionMusulman.API.Data
         // Tus tablas existentes (No tocamos nada aquí)
         public DbSet<PerfilMusulman> PerfilesMusulmanes { get; set; }
         public DbSet<AsistenciaSocial> AsistenciasSociales { get; set; }
+        public DbSet<Materia> Materias { get; set; }
         public DbSet<ClaseMadrasa> ClasesMadrasa { get; set; }
-        public DbSet<InscripcionClase> InscripcionesClases { get; set; }
-
+        public DbSet<AsistenciaMadrasa> AsistenciasMadrasa { get; set; }
         public DbSet<ArticuloInventario> Inventario { get; set; }
 
         // 👇 ¡NUEVO! Es obligatorio agregar esto para que Identity cree sus tablas sin error
@@ -27,4 +27,10 @@ namespace SistemaGestionMusulman.API.Data
             base.OnModelCreating(builder);
         }
     }
+
+        
+
 }
+
+
+        

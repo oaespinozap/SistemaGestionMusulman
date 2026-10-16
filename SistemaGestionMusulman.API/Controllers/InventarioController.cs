@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SistemaGestionMusulman.API.Data;
+using SistemaGestionMusulman.API.Models; // Asegúrate de tener este using para MovimientoInventario
 using SistemaGestionMusulman.Backend.Models;
 using ClosedXML.Excel;
 using System.IO;
@@ -35,13 +36,33 @@ namespace SistemaGestionMusulman.Backend.Controllers
         [HttpPost]
         public async Task<ActionResult<ArticuloInventario>> RegistrarArticulo(ArticuloInventario nuevoArticulo)
         {
+            // Generamos el ID si no viene
+            if (nuevoArticulo.Id == Guid.Empty)
+            {
+                nuevoArticulo.Id = Guid.NewGuid();
+            }
+
             _context.Inventario.Add(nuevoArticulo);
+
+            // 🚀 NUEVO: EL SENSOR DEL KÁRDEX (Entrada Inicial)
+            var movimientoEntrada = new MovimientoInventario
+            {
+                ArticuloInventarioId = nuevoArticulo.Id,
+                TipoMovimiento = "Entrada",
+                Cantidad = nuevoArticulo.CantidadDisponible,
+                Motivo = "Ingreso inicial de mercancía / Donación",
+                UsuarioResponsable = "Sistema - Módulo Inventario"
+            };
+
+            _context.MovimientosInventario.Add(movimientoEntrada);
+
+            // Guardamos el artículo y el recibo del Kárdex
             await _context.SaveChangesAsync();
 
             return Ok(nuevoArticulo);
         }
 
-        // 3. Actualizar inventario (Ej: Cuando restamos mercancía por una asistencia)
+        // 3. Actualizar inventario (Ej: Ajustes manuales)
         [HttpPut("{id}")]
         public async Task<IActionResult> ActualizarArticulo(Guid id, ArticuloInventario articuloActualizado)
         {
@@ -50,12 +71,47 @@ namespace SistemaGestionMusulman.Backend.Controllers
                 return BadRequest("El ID del artículo no coincide.");
             }
 
+            // 🚀 NUEVO: LÓGICA DE DETECCIÓN DE CAMBIO DE STOCK
+            // Buscamos cómo estaba el artículo ANTES de que lo modificaran
+            var articuloOriginal = await _context.Inventario.AsNoTracking().FirstOrDefaultAsync(i => i.Id == id);
+
+            if (articuloOriginal != null && articuloOriginal.CantidadDisponible != articuloActualizado.CantidadDisponible)
+            {
+                // Hubo un cambio en la cantidad, tenemos que registrarlo
+                int diferencia = articuloActualizado.CantidadDisponible - articuloOriginal.CantidadDisponible;
+
+                string tipoMovimiento = diferencia > 0 ? "Entrada" : "Salida";
+                int cantidadMovimiento = Math.Abs(diferencia); // Guardamos la cantidad siempre en positivo
+
+                var movimientoAjuste = new MovimientoInventario
+                {
+                    ArticuloInventarioId = id,
+                    TipoMovimiento = tipoMovimiento,
+                    Cantidad = cantidadMovimiento,
+                    Motivo = $"Ajuste manual de inventario. Motivo original: {(string.IsNullOrEmpty(articuloActualizado.Observaciones) ? "No especificado" : articuloActualizado.Observaciones)}",
+                    UsuarioResponsable = "Sistema - Módulo Inventario"
+                };
+
+                _context.MovimientosInventario.Add(movimientoAjuste);
+            }
+
             _context.Entry(articuloActualizado).State = EntityState.Modified;
             await _context.SaveChangesAsync();
 
             return NoContent();
-
         }
+        // 4. Obtener el Kárdex (Historial de movimientos) de un producto específico
+        [HttpGet("{id}/movimientos")]
+        public async Task<ActionResult<IEnumerable<MovimientoInventario>>> ObtenerHistorialArticulo(Guid id)
+        {
+            var movimientos = await _context.MovimientosInventario
+                .Where(m => m.ArticuloInventarioId == id)
+                .OrderByDescending(m => m.FechaMovimiento) // Los más recientes primero
+                .ToListAsync();
+
+            return Ok(movimientos);
+        }
+
         // =====================================================================
         // 🚀 SECCIÓN DE REPORTES: INVENTARIO Y ALMACÉN
         // =====================================================================
@@ -203,16 +259,5 @@ namespace SistemaGestionMusulman.Backend.Controllers
                 x.TotalPages();
             });
         }
-
-
-
-
-
-
-
-
     }
-
-
 }
-

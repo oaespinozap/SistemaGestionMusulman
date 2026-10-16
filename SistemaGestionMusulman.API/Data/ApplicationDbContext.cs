@@ -20,6 +20,7 @@ namespace SistemaGestionMusulman.API.Data
         public DbSet<ClaseMadrasa> ClasesMadrasa { get; set; }
         public DbSet<AsistenciaMadrasa> AsistenciasMadrasa { get; set; }
         public DbSet<ArticuloInventario> Inventario { get; set; }
+        public DbSet<MovimientoInventario> MovimientosInventario { get; set; }
 
         // 👇 ¡NUEVO! Es obligatorio agregar esto para que Identity cree sus tablas sin error
         protected override void OnModelCreating(ModelBuilder builder)

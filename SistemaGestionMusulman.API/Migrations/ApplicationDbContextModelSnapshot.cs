@@ -286,6 +286,43 @@ namespace SistemaGestionMusulman.API.Migrations
                     b.ToTable("Materias");
                 });
 
+            modelBuilder.Entity("SistemaGestionMusulman.API.Models.MovimientoInventario", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ArticuloInventarioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AsistenciaSocialId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("FechaMovimiento")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Motivo")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("TipoMovimiento")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("UsuarioResponsable")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArticuloInventarioId");
+
+                    b.ToTable("MovimientosInventario");
+                });
+
             modelBuilder.Entity("SistemaGestionMusulman.API.Models.PerfilMusulman", b =>
                 {
                     b.Property<Guid>("Id")
@@ -485,6 +522,17 @@ namespace SistemaGestionMusulman.API.Migrations
                         .IsRequired();
 
                     b.Navigation("Materia");
+                });
+
+            modelBuilder.Entity("SistemaGestionMusulman.API.Models.MovimientoInventario", b =>
+                {
+                    b.HasOne("SistemaGestionMusulman.Backend.Models.ArticuloInventario", "ArticuloInventarioAsociado")
+                        .WithMany()
+                        .HasForeignKey("ArticuloInventarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ArticuloInventarioAsociado");
                 });
 
             modelBuilder.Entity("SistemaGestionMusulman.Backend.Models.AsistenciaSocial", b =>

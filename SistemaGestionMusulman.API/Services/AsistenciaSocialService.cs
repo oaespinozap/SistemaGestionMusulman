@@ -44,9 +44,8 @@ namespace SistemaGestionMusulman.API.Services
 
         public async Task AgregarAsync(AsistenciaSocial asistencia)
         {
-            // Aquí el supervisor puede aplicar reglas antes de guardar. 
-            // Por ejemplo, asegurar que se genere un ID nuevo.
-            asistencia.Id = Guid.NewGuid();
+            // ELIMINAMOS la asignación del ID aquí.
+            // Ahora se generará en el Controlador para poder usarlo en el Kárdex.
             await _repository.AgregarAsync(asistencia);
         }
 

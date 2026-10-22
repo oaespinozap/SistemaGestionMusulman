@@ -10,5 +10,7 @@ namespace SistemaGestionMusulman.API.Repositories
         Task AgregarAsync(AsistenciaSocial asistencia);
         Task ActualizarAsync(AsistenciaSocial asistencia);
         Task EliminarAsync(Guid id);
+        Task<IEnumerable<AsistenciaSocial>> ObtenerPorPerfilIdAsync(Guid perfilId);
+
     }
 }

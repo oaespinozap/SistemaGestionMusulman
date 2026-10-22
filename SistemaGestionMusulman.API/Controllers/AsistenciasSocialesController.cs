@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using SistemaGestionMusulman.API.Data;
 using SistemaGestionMusulman.API.Models;
 using SistemaGestionMusulman.API.Services;
@@ -38,6 +39,27 @@ namespace SistemaGestionMusulman.API.Controllers
                 return NotFound();
             }
             return Ok(asistencia);
+        }
+        // GET: api/AsistenciasSociales/perfil/5
+        [HttpGet("perfil/{perfilId}")]
+        public async Task<ActionResult<IEnumerable<AsistenciaSocial>>> GetAsistenciasPorPerfil(Guid perfilId)
+        {
+            var asistencias = await _context.AsistenciasSociales
+                                            .Include(a => a.PerfilMusulman)
+                                            .Where(a => a.PerfilMusulmanId == perfilId)
+                                            .OrderByDescending(a => a.FechaEntrega)
+                                            .ToListAsync();
+
+            // Mapeamos el nombre para que el Frontend lo muestre bonito
+            foreach (var asistencia in asistencias)
+            {
+                if (asistencia.PerfilMusulman != null)
+                {
+                    asistencia.NombreBeneficiario = $"{asistencia.PerfilMusulman.Nombres} {asistencia.PerfilMusulman.Apellidos}";
+                }
+            }
+
+            return Ok(asistencias);
         }
 
         // POST: api/AsistenciasSociales

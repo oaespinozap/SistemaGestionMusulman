@@ -22,11 +22,12 @@ namespace SistemaGestionMusulman.API.Repositories
                                  .ToListAsync();
         }
 
-        public async Task<AsistenciaSocial> ObtenerPorIdAsync(Guid id)
+        public async Task<IEnumerable<AsistenciaSocial>> ObtenerPorPerfilIdAsync(Guid perfilId)
         {
             return await _context.AsistenciasSociales
                                  .Include(a => a.PerfilMusulman)
-                                 .FirstOrDefaultAsync(a => a.Id == id);
+                                 .Where(a => a.PerfilMusulmanId == perfilId)
+                                 .ToListAsync();
         }
 
         public async Task AgregarAsync(AsistenciaSocial asistencia)
@@ -49,6 +50,11 @@ namespace SistemaGestionMusulman.API.Repositories
                 _context.AsistenciasSociales.Remove(asistencia);
                 await _context.SaveChangesAsync();
             }
+        }
+
+        public Task<AsistenciaSocial> ObtenerPorIdAsync(Guid id)
+        {
+            throw new NotImplementedException();
         }
     }
 }

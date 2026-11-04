@@ -6,6 +6,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using static SistemaGestionMusulman.API.Models.LoginDto;
+using SistemaGestionMusulman.API.Models.DTOs;
 
 namespace SistemaGestionMusulman.API.Controllers
 {
@@ -14,7 +15,7 @@ namespace SistemaGestionMusulman.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly UserManager<IdentityUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager; // <-- NUEVO: Gestor de Roles
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
 
         public AuthController(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration)
@@ -42,7 +43,6 @@ namespace SistemaGestionMusulman.API.Controllers
             var user = await _userManager.FindByEmailAsync(modelo.Email);
             if (user != null && await _userManager.CheckPasswordAsync(user, modelo.Password))
             {
-                // 1. Buscamos qué roles tiene este usuario en la base de datos
                 var userRoles = await _userManager.GetRolesAsync(user);
 
                 var authClaims = new List<Claim>
@@ -51,7 +51,6 @@ namespace SistemaGestionMusulman.API.Controllers
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 };
 
-                // 2. ¡NUEVO! Escribimos los roles en la Pulsera VIP
                 foreach (var userRole in userRoles)
                 {
                     authClaims.Add(new Claim(ClaimTypes.Role, userRole));
@@ -76,20 +75,21 @@ namespace SistemaGestionMusulman.API.Controllers
             return Unauthorized(new { Mensaje = "Credenciales incorrectas" });
         }
 
-        // --- 3. NUEVO: Crear los rangos oficiales de la Mezquita ---
         [HttpPost("crear-roles-iniciales")]
         public async Task<IActionResult> CrearRoles()
         {
-            if (!await _roleManager.RoleExistsAsync("Administrador"))
-                await _roleManager.CreateAsync(new IdentityRole("Administrador"));
+            if (!await _roleManager.RoleExistsAsync("AdministradorMaster"))
+                await _roleManager.CreateAsync(new IdentityRole("AdministradorMaster"));
 
-            if (!await _roleManager.RoleExistsAsync("Estudiante"))
-                await _roleManager.CreateAsync(new IdentityRole("Estudiante"));
+            if (!await _roleManager.RoleExistsAsync("TrabajadorSocial"))
+                await _roleManager.CreateAsync(new IdentityRole("TrabajadorSocial"));
+
+            if (!await _roleManager.RoleExistsAsync("ProfesorMadrasa"))
+                await _roleManager.CreateAsync(new IdentityRole("ProfesorMadrasa"));
 
             return Ok(new { Mensaje = "Roles creados correctamente en la base de datos." });
         }
 
-        // --- 4. NUEVO: Asignarle un rango a un usuario ---
         [HttpPost("asignar-rol")]
         public async Task<IActionResult> AsignarRol([FromBody] AsignarRolDto modelo)
         {
@@ -103,6 +103,86 @@ namespace SistemaGestionMusulman.API.Controllers
             }
 
             return BadRequest(new { Mensaje = "El rol especificado no existe." });
+        }
+
+        // =================================================================
+        // ENDPOINTS PARA EL PANEL DE SUPER ADMINISTRADOR
+        // =================================================================
+
+        [HttpGet("usuarios")]
+        // [Authorize(Roles = "AdministradorMaster")] // Descomentar después de la primera prueba
+        public async Task<IActionResult> ObtenerTodosLosUsuarios()
+        {
+            var usuarios = _userManager.Users.ToList();
+            var listaUsuariosDTO = new List<object>();
+
+            foreach (var user in usuarios)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                listaUsuariosDTO.Add(new
+                {
+                    Id = user.Id,
+                    Email = user.Email,
+                    Roles = roles
+                });
+            }
+
+            return Ok(listaUsuariosDTO);
+        }
+
+        [HttpGet("roles")]
+        // [Authorize(Roles = "AdministradorMaster")] // Descomentar después de la primera prueba
+        public IActionResult ObtenerTodosLosRoles()
+        {
+            var roles = _roleManager.Roles.Select(r => r.Name).ToList();
+            return Ok(roles);
+        }
+
+        [HttpPut("actualizar-roles")]
+        // [Authorize(Roles = "AdministradorMaster")] // Descomentar después de la primera prueba
+        public async Task<IActionResult> ActualizarRolesUsuario([FromBody] ActualizarRolesDto modelo)
+        {
+            var user = await _userManager.FindByIdAsync(modelo.UserId);
+            if (user == null) return NotFound(new { Mensaje = "Usuario no encontrado" });
+
+            var rolesActuales = await _userManager.GetRolesAsync(user);
+            await _userManager.RemoveFromRolesAsync(user, rolesActuales);
+
+            var resultado = await _userManager.AddToRolesAsync(user, modelo.RolesNuevos);
+
+            if (resultado.Succeeded)
+                return Ok(new { Mensaje = "Roles actualizados correctamente." });
+
+            return BadRequest(resultado.Errors);
+        }
+
+        [HttpPut("restablecer-password")]
+        public async Task<IActionResult> RestablecerPassword([FromBody] RestablecerPasswordDto modelo)
+        {
+            var user = await _userManager.FindByIdAsync(modelo.UserId);
+            if (user == null) return NotFound(new { Mensaje = "Usuario no encontrado" });
+
+            // Generamos un token interno para saltarnos la contraseña vieja
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, token, modelo.NuevaPassword);
+
+            if (result.Succeeded)
+                return Ok(new { Mensaje = "Contraseña actualizada correctamente." });
+
+            return BadRequest(result.Errors);
+
+        }
+
+
+        public class ActualizarRolesDto
+        {
+            public string UserId { get; set; } = string.Empty;
+            public List<string> RolesNuevos { get; set; } = new List<string>();
+        }
+        public class RestablecerPasswordDto
+        {
+            public string UserId { get; set; } = string.Empty;
+            public string NuevaPassword { get; set; } = string.Empty;
         }
     }
 }

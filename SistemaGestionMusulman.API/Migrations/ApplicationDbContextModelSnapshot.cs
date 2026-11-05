@@ -301,6 +301,10 @@ namespace SistemaGestionMusulman.API.Migrations
                     b.Property<int>("Cantidad")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Destinatario")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
                     b.Property<DateTime>("FechaMovimiento")
                         .HasColumnType("timestamp without time zone");
 
@@ -375,6 +379,9 @@ namespace SistemaGestionMusulman.API.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("CantidadDisponible")
                         .HasColumnType("integer");

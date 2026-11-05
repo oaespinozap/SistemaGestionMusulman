@@ -11,15 +11,14 @@ namespace SistemaGestionMusulman.API.Models
         public Guid Id { get; set; } = Guid.NewGuid();
 
         [Required]
-        public Guid ArticuloInventarioId { get; set; } // <--- Corregido aquí
+        public Guid ArticuloInventarioId { get; set; }
 
-        // Relación con el producto en el inventario
-        [ForeignKey("ArticuloInventarioId")] // <--- Corregido aquí
-        [JsonIgnore] // Para evitar ciclos al hacer consultas
-        public ArticuloInventario? ArticuloInventarioAsociado { get; set; } // <--- Corregido aquí
+        [ForeignKey("ArticuloInventarioId")]
+        [JsonIgnore]
+        public ArticuloInventario? ArticuloInventarioAsociado { get; set; }
 
         [Required]
-        public string TipoMovimiento { get; set; } = string.Empty; // "Entrada" o "Salida"
+        public string TipoMovimiento { get; set; } = string.Empty; // "Entrada", "Salida", "Baja"
 
         [Required]
         public int Cantidad { get; set; }
@@ -28,12 +27,15 @@ namespace SistemaGestionMusulman.API.Models
         public DateTime FechaMovimiento { get; set; } = DateTime.UtcNow;
 
         [Required]
-        public string Motivo { get; set; } = string.Empty; // Ej: "Donación recibida", "Asistencia Social", "Ajuste", "Vencimiento"
+        public string Motivo { get; set; } = string.Empty;
 
-        // (Opcional) Si el movimiento fue por una Asistencia Social, guardamos el ID para tener la trazabilidad exacta a quién se le dio.
+        // <-- NUEVO: Para saber a quién se le entregó el artículo en una Salida -->
+        [StringLength(150)]
+        public string? Destinatario { get; set; }
+
         public Guid? AsistenciaSocialId { get; set; }
 
-        // (Opcional) Nombre de la persona que autorizó o realizó el movimiento (para auditoría)
+        // Lo dejaremos por defecto en "Sistema", pero nuestro Controlador ahora lo llenará con el JWT real
         public string UsuarioResponsable { get; set; } = "Sistema";
     }
 }

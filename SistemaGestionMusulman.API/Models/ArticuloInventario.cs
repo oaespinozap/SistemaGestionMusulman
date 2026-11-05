@@ -20,10 +20,12 @@ namespace SistemaGestionMusulman.Backend.Models
 
         public DateTime FechaIngreso { get; set; } = DateTime.UtcNow;
 
-        // Permite valores nulos (?) para cosas que no caducan, como la ropa
         public DateTime? FechaCaducidad { get; set; }
 
         [StringLength(200)]
         public string? Observaciones { get; set; }
+
+        // <-- NUEVO: Bandera para Borrado Lógico (Soft Delete) -->
+        public bool Activo { get; set; } = true;
     }
 }

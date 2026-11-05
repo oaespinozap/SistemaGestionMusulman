@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SistemaGestionMusulman.API.Data;
-using SistemaGestionMusulman.API.Models; // Asegúrate de tener este using para MovimientoInventario
+using SistemaGestionMusulman.API.Models;
 using SistemaGestionMusulman.Backend.Models;
 using ClosedXML.Excel;
 using System.IO;
@@ -19,126 +19,154 @@ namespace SistemaGestionMusulman.Backend.Controllers
     {
         private readonly ApplicationDbContext _context;
 
-        // Inyectamos la conexión a la base de datos
         public InventarioController(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        // 1. Obtener todo el inventario (Para ver qué tenemos en el almacén)
+        // =====================================================================
+        // 1. CATÁLOGO MAESTRO (Solo muestra artículos ACTIVOS)
+        // =====================================================================
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ArticuloInventario>>> ObtenerInventario()
         {
-            return await _context.Inventario.OrderByDescending(i => i.FechaIngreso).ToListAsync();
+            // 🚀 NUEVO: Solo traemos los que NO han sido dados de baja
+            return await _context.Inventario
+                .Where(i => i.Activo == true)
+                .OrderByDescending(i => i.FechaIngreso)
+                .ToListAsync();
         }
 
-        // 2. Registrar una nueva donación que entra al almacén
+        // =====================================================================
+        // 2. CREAR NUEVO ARTÍCULO (Catálogo inicial)
+        // =====================================================================
         [HttpPost]
         public async Task<ActionResult<ArticuloInventario>> RegistrarArticulo(ArticuloInventario nuevoArticulo)
         {
-            // Generamos el ID si no viene
-            if (nuevoArticulo.Id == Guid.Empty)
-            {
-                nuevoArticulo.Id = Guid.NewGuid();
-            }
+            if (nuevoArticulo.Id == Guid.Empty) nuevoArticulo.Id = Guid.NewGuid();
 
+            nuevoArticulo.Activo = true; // Nos aseguramos de que nazca activo
             _context.Inventario.Add(nuevoArticulo);
 
-            // 🚀 NUEVO: EL SENSOR DEL KÁRDEX (Entrada Inicial)
+            // Obtenemos el usuario real del Token de Seguridad
+            var usuarioActual = User.Identity?.Name ?? "Usuario Desconocido";
+
             var movimientoEntrada = new MovimientoInventario
             {
                 ArticuloInventarioId = nuevoArticulo.Id,
                 TipoMovimiento = "Entrada",
                 Cantidad = nuevoArticulo.CantidadDisponible,
-                Motivo = "Ingreso inicial de mercancía / Donación",
-                UsuarioResponsable = "Sistema - Módulo Inventario"
+                Motivo = "Registro inicial en catálogo",
+                UsuarioResponsable = usuarioActual // <-- Auditoría real
             };
 
             _context.MovimientosInventario.Add(movimientoEntrada);
-
-            // Guardamos el artículo y el recibo del Kárdex
             await _context.SaveChangesAsync();
 
             return Ok(nuevoArticulo);
         }
 
-        // 3. Actualizar inventario (Ej: Ajustes manuales)
-        [HttpPut("{id}")]
-        public async Task<IActionResult> ActualizarArticulo(Guid id, ArticuloInventario articuloActualizado)
+        // =====================================================================
+        // 3. REGISTRAR ENTRADA O SALIDA (El motor del Kárdex real)
+        // =====================================================================
+        [HttpPost("{id}/movimientos")]
+        public async Task<IActionResult> RegistrarMovimiento(Guid id, [FromBody] MovimientoInventario dtoMovimiento)
         {
-            if (id != articuloActualizado.Id)
+            var articulo = await _context.Inventario.FindAsync(id);
+            if (articulo == null || !articulo.Activo)
+                return NotFound(new { Mensaje = "El artículo no existe o está dado de baja." });
+
+            if (dtoMovimiento.TipoMovimiento == "Salida" && articulo.CantidadDisponible < dtoMovimiento.Cantidad)
+                return BadRequest(new { Mensaje = "No hay stock suficiente para realizar esta salida." });
+
+            // Actualizamos el Stock Maestro
+            if (dtoMovimiento.TipoMovimiento == "Entrada")
+                articulo.CantidadDisponible += dtoMovimiento.Cantidad;
+            else if (dtoMovimiento.TipoMovimiento == "Salida")
+                articulo.CantidadDisponible -= dtoMovimiento.Cantidad;
+            else
+                return BadRequest(new { Mensaje = "Tipo de movimiento inválido. Debe ser 'Entrada' o 'Salida'." });
+
+            // Configuramos y guardamos la traza de auditoría
+            dtoMovimiento.ArticuloInventarioId = id;
+            dtoMovimiento.FechaMovimiento = DateTime.UtcNow;
+            dtoMovimiento.UsuarioResponsable = User.Identity?.Name ?? "Usuario Desconocido";
+
+            _context.MovimientosInventario.Add(dtoMovimiento);
+            await _context.SaveChangesAsync();
+
+            return Ok(articulo);
+        }
+
+        // =====================================================================
+        // 4. DAR DE BAJA UN ARTÍCULO (Soft Delete)
+        // =====================================================================
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> EliminarArticulo(Guid id, [FromQuery] string motivo = "Artículo desincorporado del inventario")
+        {
+            var articulo = await _context.Inventario.FindAsync(id);
+            if (articulo == null || !articulo.Activo) return NotFound();
+
+            // 🚀 NUEVO: Soft Delete. No lo borramos, lo ocultamos.
+            articulo.Activo = false;
+
+            // Registramos quién ejecutó la orden de baja
+            var usuarioActual = User.Identity?.Name ?? "Usuario Desconocido";
+            var movimientoBaja = new MovimientoInventario
             {
-                return BadRequest("El ID del artículo no coincide.");
-            }
+                ArticuloInventarioId = id,
+                TipoMovimiento = "Baja",
+                Cantidad = articulo.CantidadDisponible,
+                Motivo = motivo,
+                UsuarioResponsable = usuarioActual
+            };
 
-            // 🚀 NUEVO: LÓGICA DE DETECCIÓN DE CAMBIO DE STOCK
-            // Buscamos cómo estaba el artículo ANTES de que lo modificaran
-            var articuloOriginal = await _context.Inventario.AsNoTracking().FirstOrDefaultAsync(i => i.Id == id);
+            // Vaciamos el stock para que no quede dinero/mercancía flotando
+            articulo.CantidadDisponible = 0;
 
-            if (articuloOriginal != null && articuloOriginal.CantidadDisponible != articuloActualizado.CantidadDisponible)
-            {
-                // Hubo un cambio en la cantidad, tenemos que registrarlo
-                int diferencia = articuloActualizado.CantidadDisponible - articuloOriginal.CantidadDisponible;
-
-                string tipoMovimiento = diferencia > 0 ? "Entrada" : "Salida";
-                int cantidadMovimiento = Math.Abs(diferencia); // Guardamos la cantidad siempre en positivo
-
-                var movimientoAjuste = new MovimientoInventario
-                {
-                    ArticuloInventarioId = id,
-                    TipoMovimiento = tipoMovimiento,
-                    Cantidad = cantidadMovimiento,
-                    Motivo = $"Ajuste manual de inventario. Motivo original: {(string.IsNullOrEmpty(articuloActualizado.Observaciones) ? "No especificado" : articuloActualizado.Observaciones)}",
-                    UsuarioResponsable = "Sistema - Módulo Inventario"
-                };
-
-                _context.MovimientosInventario.Add(movimientoAjuste);
-            }
-
-            _context.Entry(articuloActualizado).State = EntityState.Modified;
+            _context.MovimientosInventario.Add(movimientoBaja);
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
-        // 4. Obtener el Kárdex (Historial de movimientos) de un producto específico
+
+        // =====================================================================
+        // 5. OBTENER HISTORIAL DE UN ARTÍCULO
+        // =====================================================================
         [HttpGet("{id}/movimientos")]
         public async Task<ActionResult<IEnumerable<MovimientoInventario>>> ObtenerHistorialArticulo(Guid id)
         {
             var movimientos = await _context.MovimientosInventario
                 .Where(m => m.ArticuloInventarioId == id)
-                .OrderByDescending(m => m.FechaMovimiento) // Los más recientes primero
+                .OrderByDescending(m => m.FechaMovimiento)
                 .ToListAsync();
 
             return Ok(movimientos);
         }
 
         // =====================================================================
-        // 🚀 SECCIÓN DE REPORTES: INVENTARIO Y ALMACÉN
+        // 🚀 SECCIÓN DE REPORTES: INVENTARIO Y ALMACÉN (Solo Activos)
         // =====================================================================
-
         [HttpGet("exportar/excel")]
         public async Task<IActionResult> ExportarInventarioExcel()
         {
-            var articulos = await _context.Inventario.OrderByDescending(i => i.FechaIngreso).ToListAsync();
+            var articulos = await _context.Inventario.Where(i => i.Activo).OrderByDescending(i => i.FechaIngreso).ToListAsync();
 
             using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Estado de Inventario");
 
-            // Títulos
             worksheet.Cell(1, 1).Value = "Artículo";
             worksheet.Cell(1, 2).Value = "Categoría";
             worksheet.Cell(1, 3).Value = "Stock Disponible";
             worksheet.Cell(1, 4).Value = "Fecha Ingreso";
             worksheet.Cell(1, 5).Value = "Fecha Caducidad";
 
-            // Diseño de cabecera
             var cabecera = worksheet.Range("A1:E1");
             cabecera.Style.Font.Bold = true;
             cabecera.Style.Fill.BackgroundColor = XLColor.FromHtml("#0b2e13");
             cabecera.Style.Font.FontColor = XLColor.FromHtml("#d4af37");
             cabecera.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-            // Datos
             int fila = 2;
             foreach (var item in articulos)
             {
@@ -147,7 +175,6 @@ namespace SistemaGestionMusulman.Backend.Controllers
 
                 var cellStock = worksheet.Cell(fila, 3);
                 cellStock.Value = item.CantidadDisponible;
-                // Alerta de stock bajo en Excel
                 if (item.CantidadDisponible <= 5)
                 {
                     cellStock.Style.Font.FontColor = XLColor.Red;
@@ -163,15 +190,13 @@ namespace SistemaGestionMusulman.Backend.Controllers
 
             using var stream = new MemoryStream();
             workbook.SaveAs(stream);
-            var contenido = stream.ToArray();
-
-            return File(contenido, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Inventario_AlMusulman.xlsx");
+            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Inventario_AlMusulman.xlsx");
         }
 
         [HttpGet("exportar/pdf")]
         public async Task<IActionResult> ExportarInventarioPdf()
         {
-            var articulos = await _context.Inventario.OrderByDescending(i => i.FechaIngreso).ToListAsync();
+            var articulos = await _context.Inventario.Where(i => i.Activo).OrderByDescending(i => i.FechaIngreso).ToListAsync();
 
             QuestPDF.Settings.License = LicenseType.Community;
 
@@ -190,11 +215,9 @@ namespace SistemaGestionMusulman.Backend.Controllers
                 });
             });
 
-            byte[] pdfBytes = document.GeneratePdf();
-            return File(pdfBytes, "application/pdf", "Inventario_AlMusulman.pdf");
+            return File(document.GeneratePdf(), "application/pdf", "Inventario_AlMusulman.pdf");
         }
 
-        // --- Funciones auxiliares para dibujar el PDF de Inventario ---
         private void ComposeHeader(IContainer container)
         {
             container.Row(row =>
@@ -213,15 +236,14 @@ namespace SistemaGestionMusulman.Backend.Controllers
             container.PaddingVertical(1, Unit.Centimetre).Column(column =>
             {
                 column.Spacing(5);
-
                 column.Item().Table(table =>
                 {
                     table.ColumnsDefinition(columns =>
                     {
-                        columns.RelativeColumn(3); // Artículo
-                        columns.RelativeColumn(2); // Categoría
-                        columns.RelativeColumn(2); // Stock
-                        columns.RelativeColumn(2); // Vencimiento
+                        columns.RelativeColumn(3);
+                        columns.RelativeColumn(2);
+                        columns.RelativeColumn(2);
+                        columns.RelativeColumn(2);
                     });
 
                     table.Header(header =>
@@ -237,7 +259,6 @@ namespace SistemaGestionMusulman.Backend.Controllers
                         table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(2).Text(item.Nombre);
                         table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(2).Text(item.Categoria);
 
-                        // Resaltar en rojo si hay 5 o menos
                         if (item.CantidadDisponible <= 5)
                             table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(2).Text(item.CantidadDisponible.ToString()).FontColor(Colors.Red.Medium).Bold();
                         else

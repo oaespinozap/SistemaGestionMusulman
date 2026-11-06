@@ -65,7 +65,38 @@ namespace SistemaGestionMusulman.Backend.Controllers
 
             return Ok(nuevoArticulo);
         }
+        // =====================================================================
+        // OBTENER UN ARTÍCULO ESPECÍFICO POR ID
+        // =====================================================================
+        [HttpGet("{id}")]
+        public async Task<ActionResult<ArticuloInventario>> ObtenerArticulo(Guid id)
+        {
+            var articulo = await _context.Inventario.FindAsync(id);
+            if (articulo == null || !articulo.Activo) return NotFound();
 
+            return Ok(articulo);
+        }
+
+        // =====================================================================
+        // ACTUALIZAR DATOS MAESTROS DEL ARTÍCULO
+        // =====================================================================
+        [Authorize(Roles = "AdministradorMaster,Administrador")]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> ActualizarArticulo(Guid id, ArticuloInventario articuloModificado)
+        {
+            if (id != articuloModificado.Id) return BadRequest(new { Mensaje = "Los IDs no coinciden." });
+
+            var articuloDB = await _context.Inventario.FindAsync(id);
+            if (articuloDB == null || !articuloDB.Activo) return NotFound();
+
+            // Actualizamos solo los datos permitidos (NO el stock)
+            articuloDB.Nombre = articuloModificado.Nombre;
+            articuloDB.Categoria = articuloModificado.Categoria;
+            articuloDB.FechaCaducidad = articuloModificado.FechaCaducidad;
+
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
         // =====================================================================
         // 3. REGISTRAR ENTRADA O SALIDA (El motor del Kárdex real)
         // =====================================================================
@@ -101,6 +132,7 @@ namespace SistemaGestionMusulman.Backend.Controllers
         // =====================================================================
         // 4. DAR DE BAJA UN ARTÍCULO (Soft Delete)
         // =====================================================================
+        [Authorize(Roles = "AdministradorMaster,Administrador")] // <-- Permitimos ambos roles
         [HttpDelete("{id}")]
         public async Task<IActionResult> EliminarArticulo(Guid id, [FromQuery] string motivo = "Artículo desincorporado del inventario")
         {
